@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deutsch-Spiele</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@700&display=swap">
+<style>
+:root{--bg:#e9edf0;--card:#fff;--ink:#18212b;--muted:#5a6672;--rule:#d2d8de;--a:#1a2430;--b:#e7d6ae}
+@media (prefers-color-scheme:dark){:root{--bg:#10161c;--card:#18212a;--ink:#e6ebf0;--muted:#9aa5b0;--rule:#2a3540;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-size:17px;line-height:1.5}
+main{max-width:860px;margin:0 auto;padding:40px 16px 56px;display:flex;flex-direction:column;gap:24px}
+h1{font-family:"Zilla Slab",Georgia,serif;font-size:clamp(36px,6vw,56px);line-height:1;margin:0}
+p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+a.card{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden;transition:transform .12s}
+a.card:hover{transform:translateY(-3px)}
+a.card:focus-visible{outline:3px solid #2d62c4;outline-offset:3px}
+.band{height:92px;display:flex;align-items:flex-end;padding:14px 18px;font-family:"Zilla Slab",Georgia,serif;font-size:28px;font-weight:700}
+.z{background:var(--a);color:#f4c13d}
+.f{background:var(--b);color:#1c2420}
+.txt{padding:4px 18px 18px;display:flex;flex-direction:column;gap:6px}
+.go{font-weight:700;margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Deutsch-Spiele</h1>
+  <p>Wähle ein Spiel. Dein Fortschritt wird in diesem Browser gespeichert.</p>
+  <div class="grid">
+    <a class="card" href="/zeitformen/">
+      <div class="band z">Zeitreise-Express</div>
+      <div class="txt"><b>Zeitformen</b><span>Präsens, Präteritum, Perfekt, Plusquamperfekt, Futur I und II in fünf Spielen.</span><span class="go">Spiel starten →</span></div>
+    </a>
+    <a class="card" href="/vier-faelle/">
+      <div class="band f">Kommissariat 4 Fälle</div>
+      <div class="txt"><b>Die vier Fälle</b><span>Nominativ, Akkusativ, Dativ und Genitiv in sechs Akten.</span><span class="go">Spiel starten →</span></div>
+    </a>
+  </div>
+</main>
+</body>
+</html>

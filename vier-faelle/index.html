@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Kommissariat 4 Fälle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* Layout: a detective's desk; each mini-game is a manila case file ("Akte"); the four cases are colour-coded evidence tags; solved files get a rubber stamp. */
+:root{
+  --desk:#dde3de; --folder:#e7d6ae; --folder-edge:#cdb886; --paper:#fbfaf6; --ink:#1c2420; --muted:#5b6660; --rule:#d4d9d3;
+  --stamp:#b3302a; --ok:#1d7f4c; --ok-soft:#ddf0e3; --bad:#b3302a; --bad-soft:#f8e1dd; --hl:#f2d24b;
+  --c-nom:#2d62c4; --c-akk:#c9661a; --c-dat:#1b8656; --c-gen:#8549c2;
+  --f-display:"Zilla Slab",Rockwell,Georgia,serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-type:"Courier Prime","Courier New",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --desk:#131917; --folder:#3a3324; --folder-edge:#544a33; --paper:#1c2320; --ink:#e7ece8; --muted:#a0aba5; --rule:#33403a;
+  --stamp:#ff6b5e; --ok:#55c98a; --ok-soft:#173727; --bad:#ff6b5e; --bad-soft:#3d1d1a; --hl:#8a7420; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#131917; --folder:#3a3324; --folder-edge:#544a33; --paper:#1c2320; --ink:#e7ece8; --muted:#a0aba5; --rule:#33403a;
+  --stamp:#ff6b5e; --ok:#55c98a; --ok-soft:#173727; --bad:#ff6b5e; --bad-soft:#3d1d1a; --hl:#8a7420; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--desk);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 48px}
+.stack{display:flex;flex-direction:column;gap:22px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--c-nom);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.type{font-family:var(--f-type)}
+.lbl{font-family:var(--f-type);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- Cover ---------- */
+.cover{background:var(--folder);border:1px solid var(--folder-edge);border-radius:4px 14px 14px 14px;padding:26px clamp(18px,4vw,40px) 28px;position:relative;display:flex;flex-direction:column;gap:16px;margin-top:22px}
+.cover::before{content:"Aktenzeichen D.5.D.1.D";position:absolute;top:-30px;left:-1px;background:var(--folder);border:1px solid var(--folder-edge);border-bottom:0;border-radius:10px 10px 0 0;padding:5px 16px 4px;font-family:var(--f-type);font-size:13px;color:var(--muted)}
+.cover h1{font-family:var(--f-display);font-weight:700;font-size:clamp(38px,7vw,72px);line-height:.98;letter-spacing:-.01em}
+.cover h1 span{display:block;font-size:.42em;letter-spacing:.14em;text-transform:uppercase;font-family:var(--f-type);font-weight:700;color:var(--muted);margin-bottom:8px}
+.cover p{margin:0;max-width:60ch}
+.bigstamp{position:absolute;right:clamp(14px,4vw,40px);top:24px;border:4px solid var(--stamp);color:var(--stamp);font-family:var(--f-type);font-weight:700;font-size:clamp(14px,2.2vw,20px);letter-spacing:.12em;padding:6px 12px;border-radius:6px;transform:rotate(-9deg);opacity:.85;text-align:center;line-height:1.15}
+.bigstamp b{display:block;font-size:2em;letter-spacing:.04em}
+@keyframes slam{0%{transform:rotate(-9deg) scale(2.2);opacity:0}60%{transform:rotate(-9deg) scale(.94);opacity:.95}100%{transform:rotate(-9deg) scale(1);opacity:.85}}
+.bigstamp{animation:slam .5s cubic-bezier(.3,1.4,.6,1)}
+@media (prefers-reduced-motion:reduce){.bigstamp{animation:none}}
+@media (max-width:620px){.bigstamp{position:static;align-self:flex-start;transform:rotate(-4deg);animation:none}}
+
+.cases{display:flex;flex-wrap:wrap;gap:8px}
+.cchip{display:inline-flex;align-items:baseline;gap:8px;border-radius:6px;padding:5px 12px;color:#fff;font-weight:700;font-size:15px}
+.cchip i{font-style:normal;font-family:var(--f-type);font-weight:400;opacity:.92}
+
+.controls{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:end}
+.field{display:flex;flex-direction:column;gap:5px}
+.field input{background:var(--paper);border:1px solid var(--folder-edge);color:var(--ink);border-radius:8px;padding:10px 12px;font:inherit;width:min(260px,100%)}
+.btn2{background:var(--paper);border:1px solid var(--folder-edge);border-radius:8px;padding:10px 14px}
+.btn2:hover{border-color:var(--ink)}
+
+/* ---------- Files grid ---------- */
+.files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 18px;margin-top:10px}
+@media (max-width:860px){.files{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.files{grid-template-columns:1fr}}
+.file{position:relative;background:var(--folder);border:1px solid var(--folder-edge);border-radius:0 10px 10px 10px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.file .tab{position:absolute;top:-24px;left:-1px;background:var(--folder);border:1px solid var(--folder-edge);border-bottom:0;border-radius:8px 8px 0 0;padding:3px 14px 2px;font-family:var(--f-type);font-size:13px;font-weight:700}
+.file h3{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1.05}
+.file p{margin:0;color:var(--muted);font-size:15px}
+.file .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:6px}
+.stars{letter-spacing:2px;font-size:20px;color:var(--folder-edge);white-space:nowrap}
+.stars .on{color:var(--stamp)}
+.open{background:var(--ink);color:var(--paper);border:0;border-radius:8px;padding:9px 14px;font-weight:700;white-space:nowrap}
+.open:hover{filter:brightness(1.15)}
+.solved{position:absolute;right:12px;top:10px;border:3px solid var(--stamp);color:var(--stamp);font-family:var(--f-type);font-weight:700;font-size:14px;letter-spacing:.12em;padding:2px 8px;border-radius:4px;transform:rotate(8deg);opacity:.85}
+
+.below{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px}
+@media (max-width:760px){.below{grid-template-columns:1fr}}
+.badge{background:var(--paper);border:1px solid var(--rule);border-radius:12px;display:grid;grid-template-columns:auto 1fr;gap:18px;padding:18px 20px;align-items:center}
+.badge .seal{width:84px;height:84px;border-radius:50%;border:3px double var(--stamp);display:grid;place-items:center;text-align:center;color:var(--stamp);font-family:var(--f-display);font-weight:700;line-height:1}
+.badge .seal b{font-size:34px;display:block}
+.badge .seal small{font-family:var(--f-type);font-size:11px}
+.badge h3{font-family:var(--f-display);font-weight:700;font-size:26px;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px}
+.kv div{display:flex;flex-direction:column;min-width:0}
+.kv .k{font-family:var(--f-type);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kv .v{font-weight:700;font-variant-numeric:tabular-nums}
+.note{font-size:14px;color:var(--muted);margin:6px 0 0}
+.howto{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:18px 20px}
+.howto h3{font-family:var(--f-display);font-weight:700;font-size:22px;margin-bottom:8px}
+.howto ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.kbd{font-family:var(--f-type);font-size:13px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:5px;padding:0 6px;background:var(--desk)}
+
+/* ---------- Game ---------- */
+.gbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--folder);border:1px solid var(--folder-edge);border-radius:12px;padding:12px 16px}
+.gbar .ttl{font-family:var(--f-display);font-weight:700;font-size:26px;flex:1;min-width:0;line-height:1.1}
+.gbar .ttl small{display:block;font-family:var(--f-type);font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;font-weight:400}
+.back{background:var(--paper);border:1px solid var(--folder-edge);border-radius:8px;padding:8px 12px}
+.stat{display:flex;flex-direction:column;align-items:flex-end}
+.stat .v{font-family:var(--f-type);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.combo{background:var(--stamp);color:#fff;font-family:var(--f-type);font-weight:700;border-radius:5px;padding:2px 8px;font-size:14px}
+
+.evidence{display:flex;gap:6px}
+.evidence span{flex:1;height:12px;border-radius:3px;background:var(--rule);transition:background .2s}
+.evidence span.cur{background:var(--ink)}
+.evidence span.ok{background:var(--ok)}
+.evidence span.bad{background:var(--bad)}
+
+.qcard{background:var(--paper);border:1px solid var(--rule);border-radius:4px 14px 14px 14px;padding:clamp(18px,3.5vw,32px);display:flex;flex-direction:column;gap:20px;box-shadow:0 1px 0 var(--rule),0 8px 24px rgba(20,30,25,.08)}
+.qhead{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.qtask{font-size:15px;color:var(--muted);margin:0}
+.sentence{font-size:clamp(22px,3.4vw,30px);line-height:1.5;margin:0}
+.sentence mark{background:linear-gradient(transparent 58%,var(--hl) 58%);color:inherit;font-weight:700;padding:0 2px}
+.sentence .base{font-family:var(--f-type);font-size:.7em;color:var(--muted)}
+.gap{display:inline-block;min-width:3em;border-bottom:3px dashed var(--muted);text-align:center;font-weight:700}
+
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.choice{position:relative;background:var(--desk);border:2px solid var(--rule);border-radius:10px;padding:12px 12px 12px 42px;text-align:left;font-weight:700;font-size:18px;line-height:1.2;transition:transform .08s}
+.choice small{display:block;font-family:var(--f-type);font-weight:400;font-size:14px;color:var(--muted)}
+.choice:hover:not(:disabled){border-color:var(--ink);transform:translateY(-1px)}
+.choice .key{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:var(--f-type);font-size:12px;border:1px solid var(--rule);border-radius:4px;padding:0 5px;color:var(--muted);background:var(--paper)}
+.choice .sw{position:absolute;left:0;top:10px;bottom:10px;width:5px;border-radius:0 3px 3px 0}
+.choice.right{border-color:var(--ok);background:var(--ok-soft)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.choice:disabled{cursor:default}
+.arts .choice{text-align:center;padding:14px 10px 14px 34px;font-family:var(--f-display);font-size:26px}
+.arts{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}
+
+.timer{height:8px;background:var(--desk);border-radius:4px;overflow:hidden;border:1px solid var(--rule)}
+.timer i{display:block;height:100%;background:var(--ink);width:100%}
+.prep{font-family:var(--f-display);font-weight:700;font-size:clamp(48px,10vw,88px);line-height:1;margin:0;text-align:center}
+
+.wform{display:flex;gap:10px;flex-wrap:wrap}
+.wform input{flex:1;min-width:0;font:inherit;font-size:22px;padding:12px 14px;border:2px solid var(--rule);border-radius:10px;background:var(--desk);color:var(--ink)}
+.wform input.right{border-color:var(--ok);background:var(--ok-soft)}
+.wform input.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.primary{background:var(--ink);color:var(--paper);border:0;border-radius:10px;padding:12px 20px;font-weight:700}
+.primary:disabled{opacity:.4;cursor:default}
+.ghost{background:transparent;border:1px solid var(--rule);border-radius:10px;padding:11px 16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.umls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.umls button{background:var(--desk);border:1px solid var(--rule);border-radius:6px;padding:2px 10px;font-size:16px}
+
+.tokens{display:flex;flex-wrap:wrap;gap:8px}
+.tok{background:var(--desk);border:2px solid var(--rule);border-radius:8px;padding:8px 12px;font-size:clamp(18px,2.8vw,23px)}
+.tok:hover:not(:disabled){border-color:var(--ink)}
+.tok.wrong{border-color:var(--bad);background:var(--bad-soft);text-decoration:line-through}
+.tok.miss{border-color:var(--bad);border-style:dashed}
+.tok:disabled{cursor:default}
+
+.groups{display:flex;flex-direction:column;gap:10px}
+.grp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border-top:1px solid var(--rule);padding-top:10px}
+.grp .g{font-weight:700;font-size:20px}
+.grp .g small{display:block;font-weight:400;font-size:14px;color:var(--muted)}
+.mini{display:flex;gap:6px;flex-wrap:wrap}
+.mini button{border:2px solid var(--rule);background:var(--desk);border-radius:8px;padding:6px 10px;font-weight:700;font-size:15px;min-width:52px}
+.mini button[aria-pressed="true"]{color:#fff;border-color:transparent}
+.mini button.right{outline:3px solid var(--ok);outline-offset:1px}
+.mini button.wrong{outline:3px solid var(--bad);outline-offset:1px}
+@media (max-width:560px){.grp{grid-template-columns:1fr}}
+
+.fb{border-radius:12px;padding:16px 18px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;border:2px solid}
+.fb.ok{background:var(--ok-soft);border-color:var(--ok)}
+.fb.no{background:var(--bad-soft);border-color:var(--bad)}
+.fb .msg{flex:1;min-width:220px;display:flex;flex-direction:column;gap:4px}
+.fb .head{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1.1}
+.fb.ok .head{color:var(--ok)} .fb.no .head{color:var(--bad)}
+.fb .sol{font-weight:700;font-size:18px}
+.fb .why{margin:0}
+.fb .pts{font-family:var(--f-type);font-weight:700}
+.tag{display:inline-block;color:#fff;border-radius:5px;padding:1px 8px;font-weight:700;font-size:15px}
+
+.result{background:var(--paper);border:1px solid var(--rule);border-radius:14px;padding:clamp(20px,4vw,36px);display:flex;flex-direction:column;gap:16px;align-items:flex-start;position:relative}
+.result .bigstars{font-size:clamp(44px,9vw,70px);letter-spacing:6px;line-height:1;color:var(--rule)}
+.result .bigstars .on{color:var(--stamp)}
+.result h2{font-family:var(--f-display);font-weight:700;font-size:clamp(32px,5vw,46px)}
+.review{width:100%;display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.review li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:15px;border-top:1px solid var(--rule);padding-top:6px}
+.review .ok{color:var(--ok);font-weight:700}.review .no{color:var(--bad);font-weight:700}
+
+.overlay{position:fixed;inset:0;background:rgba(10,14,12,.6);z-index:50;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.sheet{background:var(--paper);color:var(--ink);border-radius:14px;max-width:840px;width:100%;padding:clamp(18px,3vw,30px);display:flex;flex-direction:column;gap:16px}
+.sheet h2{font-family:var(--f-display);font-weight:700;font-size:34px}
+.sheet h3{font-family:var(--f-display);font-weight:700;font-size:22px}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;min-width:500px;font-size:16px}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule)}
+.tbl th{font-family:var(--f-type);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tbl td:first-child{font-weight:700;white-space:nowrap}
+.merke{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.merke div{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;font-size:15px;background:var(--desk)}
+.merke b{display:block;font-size:13px;font-family:var(--f-type);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.x{align-self:flex-end;background:transparent;border:1px solid var(--rule);border-radius:8px;padding:6px 12px}
+
+@keyframes pop{0%{transform:scale(.97);opacity:.4}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .22s ease-out}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<section id="home" class="stack">
+  <div class="cover">
+    <div class="bigstamp" aria-hidden="true">Streng<b>GEHEIM</b>Grammatik</div>
+    <h1><span>Kommissariat</span>Die vier Fälle</h1>
+    <p>Du ermittelst in sechs Akten. In jedem Satz versteckt sich ein Fall, und mit der richtigen Frage findest du ihn. Für jede Akte bekommst du Punkte und bis zu 3 Sterne. Wer mehrmals hintereinander richtig liegt, bekommt doppelte oder dreifache Punkte.</p>
+    <div class="cases" id="caseChips"></div>
+    <div class="controls">
+      <div class="field">
+        <label class="lbl" for="name">Name der Ermittlerin / des Ermittlers</label>
+        <input id="name" type="text" maxlength="30" placeholder="z. B. Noah" autocomplete="off">
+      </div>
+      <button class="btn2" id="sheetBtn" type="button">Spickzettel öffnen</button>
+      <button class="btn2" id="soundBtn" type="button" aria-pressed="false">Ton: aus</button>
+    </div>
+  </div>
+
+  <div class="files" id="files"></div>
+
+  <div class="below">
+    <div class="badge" id="badge"></div>
+    <div class="howto">
+      <h3>So ermittelst du</h3>
+      <ol>
+        <li>Name eintragen, dann eine Akte öffnen. Die Reihenfolge ist egal.</li>
+        <li>Frag immer mit dem Verb: <b>Wer? Wen? Wem? Wessen?</b></li>
+        <li>Tasten: <span class="kbd">1</span>–<span class="kbd">6</span> wählt eine Antwort, <span class="kbd">Enter</span> geht weiter.</li>
+        <li>Am Schluss zeigst du deinen Dienstausweis der Lehrperson.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="game" class="stack" hidden>
+  <div class="gbar">
+    <button class="back" id="quit" type="button">← Alle Akten</button>
+    <div class="ttl" id="gTitle"></div>
+    <span class="combo" id="combo" hidden></span>
+    <div class="stat"><span class="lbl">Punkte</span><span class="v" id="gScore">0</span></div>
+  </div>
+  <div class="evidence" id="evidence" aria-hidden="true"></div>
+  <div class="qcard" id="qcard"></div>
+  <div id="fb"></div>
+</section>
+
+<section id="result" hidden></section>
+</div>
+
+<div class="overlay" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <button class="x" id="sheetClose" type="button">Schliessen</button>
+    <h2 id="sheetTitle">Spickzettel</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Fall</th><th>Frage</th><th>männlich</th><th>weiblich</th><th>sächlich</th><th>Mehrzahl</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--c-nom)">Nominativ</td><td>Wer oder was?</td><td>der / ein</td><td>die</td><td>das</td><td>die</td></tr>
+        <tr><td style="color:var(--c-akk)">Akkusativ</td><td>Wen oder was?</td><td>den / einen</td><td>die</td><td>das</td><td>die</td></tr>
+        <tr><td style="color:var(--c-dat)">Dativ</td><td>Wem?</td><td>dem / einem</td><td>der</td><td>dem</td><td>den …-n</td></tr>
+        <tr><td style="color:var(--c-gen)">Genitiv</td><td>Wessen?</td><td>des …-s / eines</td><td>der</td><td>des …-s</td><td>der</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Merke</h3>
+    <div class="merke">
+      <div><b>Ersatzprobe</b>Bei «die» und «das» unsicher? Setz «der Hund» ein. Ich sehe die Katze → Ich sehe <u>den</u> Hund: Akkusativ.</div>
+      <div><b>Immer Akkusativ</b>für, durch, ohne, gegen, um</div>
+      <div><b>Immer Dativ</b>mit, von, bei, nach, zu, aus, seit</div>
+      <div><b>Immer Genitiv</b>wegen, während, trotz</div>
+      <div><b>Wo oder wohin?</b>in, an, auf, unter, über, vor, hinter, neben, zwischen: Wo? Dativ. Wohin? Akkusativ.</div>
+      <div><b>Endungen</b>Genitiv männlich/sächlich: -s oder -es (des Vaters). Dativ Mehrzahl: -n (den Kindern), ausser bei -n oder -s (den Frauen, den Autos).</div>
+      <div><b>Immer mit -n</b>Nachbar, Mensch, Knabe, Hase, Löwe: ausser im Nominativ Einzahl immer -n oder -en: dem Nachbarn, des Hasen.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===================== DATA ===================== */
+const CASES = {
+  N:{name:"Nominativ",q:"Wer oder was?",c:"var(--c-nom)",short:"Nom."},
+  A:{name:"Akkusativ",q:"Wen oder was?",c:"var(--c-akk)",short:"Akk."},
+  D:{name:"Dativ",q:"Wem?",c:"var(--c-dat)",short:"Dat."},
+  G:{name:"Genitiv",q:"Wessen?",c:"var(--c-gen)",short:"Gen."}
+};
+const ORDER = ["N","A","D","G"];
+
+const FILES = [
+  {id:"verhoer", nr:"Akte 01", name:"Das Verhör", task:"Den Fall der markierten Nomengruppe bestimmen.", n:8},
+  {id:"artikel", nr:"Akte 02", name:"Artikel-Fahndung", task:"Den richtigen Artikel einsetzen, gegen die Uhr.", n:10},
+  {id:"praep", nr:"Akte 03", name:"Präpositionen-Kartei", task:"Welchen Fall verlangt die Präposition?", n:12},
+  {id:"spuren", nr:"Akte 04", name:"Spurensicherung", task:"Die Nomengruppe im richtigen Fall eintippen.", n:8},
+  {id:"fehler", nr:"Akte 05", name:"Der Fehler im Satz", task:"Das falsche Wort finden und anklicken.", n:6},
+  {id:"komplett", nr:"Akte 06", name:"Akte komplett", task:"Alle Nomengruppen eines Satzes bestimmen.", n:5}
+];
+
+// s: sentence with [marked] group, a: case, w: why
+const VERHOER = [
+ {s:"[Der Hund] bellt laut.",a:"N",w:"Wer bellt laut? Der Hund."},
+ {s:"Ich rufe [den Lehrer] an.",a:"A",w:"Wen rufe ich an? Den Lehrer."},
+ {s:"Das ist das Velo [des Vaters].",a:"G",w:"Wessen Velo ist das? Das -s bei «Vaters» zeigt es auch."},
+ {s:"Tim schreibt [seiner Tante] einen Brief.",a:"D",w:"Wem schreibt Tim einen Brief? Ersatzprobe: Tim schreibt dem Hund einen Brief."},
+ {s:"Die Bäckerin gibt [dem Mädchen] ein Gipfeli.",a:"D",w:"Wem gibt die Bäckerin ein Gipfeli? Dem Mädchen."},
+ {s:"[Die Bäckerin] gibt dem Mädchen ein Gipfeli.",a:"N",w:"Wer gibt ein Gipfeli? Die Bäckerin."},
+ {s:"[Die Lehrerin] öffnet das Fenster.",a:"N",w:"Wer öffnet das Fenster? Ersatzprobe: Der Hund öffnet das Fenster. «der» zeigt den Nominativ."},
+ {s:"Die Lehrerin öffnet [das Fenster].",a:"A",w:"Wen oder was öffnet sie? Ersatzprobe: Sie öffnet den Hund. «den» zeigt den Akkusativ."},
+ {s:"Ich kaufe [einen Apfel].",a:"A",w:"Wen oder was kaufe ich? Einen Apfel. «einen» gibt es nur im Akkusativ."},
+ {s:"Wir danken [dem Buschauffeur].",a:"D",w:"Wem danken wir? Dem Buschauffeur."},
+ {s:"Das Dach [des Hauses] ist rot.",a:"G",w:"Wessen Dach ist rot? Das Dach des Hauses."},
+ {s:"Der Grossvater erzählt [den Kindern] eine Geschichte.",a:"D",w:"Wem erzählt er eine Geschichte? Ersatzprobe: dem Hund. Also Dativ."},
+ {s:"Ich sehe [die Katze].",a:"A",w:"Ersatzprobe: Ich sehe den Hund. «den» zeigt den Akkusativ."},
+ {s:"[Das Kind] lacht.",a:"N",w:"Ersatzprobe: Der Hund lacht. «der» zeigt den Nominativ."},
+ {s:"Mia gibt [der Katze] Futter.",a:"D",w:"Wem gibt Mia Futter? Der Katze. Weiblich im Dativ: der."},
+ {s:"Wegen [des Regens] bleiben wir drinnen.",a:"G",w:"Nach «wegen» steht der Genitiv."},
+ {s:"Das ist die Jacke [des Knaben].",a:"G",w:"Wessen Jacke? Die Jacke des Knaben."},
+ {s:"Der Polizist hilft [dem Menschen].",a:"D",w:"Wem hilft der Polizist? Dem Menschen."},
+ {s:"Wir besuchen [die Grosseltern] in Luzern.",a:"A",w:"Wen besuchen wir? Ersatzprobe: Wir besuchen den Hund. Akkusativ."},
+ {s:"[Die Kinder] spielen im Pausenhof.",a:"N",w:"Wer spielt im Pausenhof? Die Kinder."},
+ {s:"Noah fragt [seine Schwester].",a:"A",w:"Wen fragt Noah? Seine Schwester. Ersatzprobe: Noah fragt den Hund."},
+ {s:"Die Katze springt auf [das Sofa].",a:"A",w:"Wohin springt die Katze? Wohin verlangt den Akkusativ."},
+ {s:"Die Katze schläft auf [dem Sofa].",a:"D",w:"Wo schläft die Katze? Wo verlangt den Dativ."},
+ {s:"Das Foto [seiner Schwester] hängt an der Wand.",a:"G",w:"Wessen Foto? Das Foto seiner Schwester."},
+ {s:"Ich gebe [dem Nachbarn] den Schlüssel.",a:"D",w:"Wem gebe ich den Schlüssel? Dem Nachbarn (mit -n!)."}
+];
+
+// s: sentence with ___, b: base article hint, a: answer, w: why
+const ARTIKEL = [
+ {s:"Ich helfe ___ Mutter.",b:"die",a:"der",w:"Wem helfe ich? Dativ. Weiblich im Dativ: der."},
+ {s:"Wir wandern durch ___ Wald.",b:"der",a:"den",w:"Nach «durch» steht immer der Akkusativ: den Wald."},
+ {s:"Ich sehe ___ Zug schon.",b:"der",a:"den",w:"Wen oder was sehe ich? Akkusativ: den Zug."},
+ {s:"Mia gibt ___ Katze Futter.",b:"die",a:"der",w:"Wem gibt Mia Futter? Dativ: der Katze."},
+ {s:"Ich hänge das Bild an ___ Wand.",b:"die",a:"die",w:"Wohin hänge ich das Bild? Akkusativ: an die Wand."},
+ {s:"Jetzt hängt das Bild an ___ Wand.",b:"die",a:"der",w:"Wo hängt das Bild? Dativ: an der Wand."},
+ {s:"Der Ball rollt unter ___ Bank.",b:"die",a:"die",w:"Wohin rollt der Ball? Akkusativ: unter die Bank."},
+ {s:"Jetzt liegt der Ball unter ___ Bank.",b:"die",a:"der",w:"Wo liegt der Ball? Dativ: unter der Bank."},
+ {s:"Die Katze springt auf ___ Sofa.",b:"das",a:"das",w:"Wohin springt sie? Akkusativ. Bei «das» bleibt der Artikel gleich."},
+ {s:"Dann schläft sie auf ___ Sofa.",b:"das",a:"dem",w:"Wo schläft sie? Dativ: auf dem Sofa."},
+ {s:"Wir treffen uns vor ___ Bahnhof.",b:"der",a:"dem",w:"Wo treffen wir uns? Dativ: vor dem Bahnhof."},
+ {s:"Gebt bitte ___ Lehrerin den Zettel.",b:"die",a:"der",w:"Wem gebt ihr den Zettel? Dativ: der Lehrerin."},
+ {s:"Ich lege das Buch auf ___ Tisch.",b:"der",a:"den",w:"Wohin lege ich das Buch? Akkusativ: auf den Tisch."},
+ {s:"Das Buch liegt auf ___ Tisch.",b:"der",a:"dem",w:"Wo liegt das Buch? Dativ: auf dem Tisch."},
+ {s:"Das Fell ___ Hundes glänzt.",b:"der",a:"des",w:"Wessen Fell? Genitiv: des Hundes."},
+ {s:"Das Dach ___ Hauses ist rot.",b:"das",a:"des",w:"Wessen Dach? Genitiv: des Hauses."},
+ {s:"Ich gehe mit ___ Hund spazieren.",b:"der",a:"dem",w:"Nach «mit» steht immer der Dativ."},
+ {s:"Das Geschenk ist für ___ Vater.",b:"der",a:"den",w:"Nach «für» steht immer der Akkusativ."},
+ {s:"Wegen ___ Regens bleiben wir drinnen.",b:"der",a:"des",w:"Nach «wegen» steht der Genitiv."},
+ {s:"Die Kinder spielen mit ___ Bällen.",b:"die, Mehrzahl",a:"den",w:"Nach «mit» Dativ. Mehrzahl im Dativ: den Bällen."},
+ {s:"___ Kind lacht.",b:"das",a:"das",w:"Wer lacht? Nominativ: das Kind."},
+ {s:"Lara wohnt bei ___ Grossmutter.",b:"die",a:"der",w:"Nach «bei» steht immer der Dativ."},
+ {s:"Wir laufen um ___ See.",b:"der",a:"den",w:"Nach «um» steht immer der Akkusativ."},
+ {s:"Seit ___ Ferien bin ich müde.",b:"die, Mehrzahl",a:"den",w:"Nach «seit» steht der Dativ. Mehrzahl: den Ferien."},
+ {s:"Ich komme aus ___ Schulhaus.",b:"das",a:"dem",w:"Nach «aus» steht immer der Dativ."},
+ {s:"Während ___ Pause essen wir Znüni.",b:"die",a:"der",w:"Nach «während» steht der Genitiv. Weiblich: der."},
+ {s:"Trotz ___ Kälte gehen wir baden.",b:"die",a:"der",w:"Nach «trotz» steht der Genitiv. Weiblich: der."},
+ {s:"___ Hund bellt laut.",b:"der",a:"der",w:"Wer bellt? Nominativ: der Hund."}
+];
+const ARTS = ["der","die","das","den","dem","des"];
+
+// preposition, case (A/D/G/W), example
+const PRAEP = [
+ ["für","A","für den Vater"],["durch","A","durch den Wald"],["ohne","A","ohne meine Jacke"],["gegen","A","gegen den Wind"],["um","A","um den See"],
+ ["mit","D","mit dem Hund"],["von","D","von der Lehrerin"],["bei","D","bei der Grossmutter"],["nach","D","nach dem Training"],["zu","D","zu dem Bahnhof (zum Bahnhof)"],["aus","D","aus dem Schulhaus"],["seit","D","seit dem Sommer"],
+ ["wegen","G","wegen des Regens"],["während","G","während der Pause"],["trotz","G","trotz der Kälte"],
+ ["in","W","Wo? in dem (im) Zimmer · Wohin? in das Zimmer"],["an","W","Wo? an der Wand · Wohin? an die Wand"],["auf","W","Wo? auf dem Tisch · Wohin? auf den Tisch"],
+ ["unter","W","Wo? unter der Bank · Wohin? unter die Bank"],["über","W","Wo? über dem Haus · Wohin? über das Haus"],["vor","W","Wo? vor dem Bahnhof · Wohin? vor den Bahnhof"],
+ ["hinter","W","Wo? hinter dem Haus · Wohin? hinter das Haus"],["neben","W","Wo? neben dem Velo · Wohin? neben das Velo"],["zwischen","W","Wo? zwischen den Bäumen · Wohin? zwischen die Bäume"]
+];
+const PCASES = [
+  {k:"A",label:"Akkusativ",sub:"immer",c:"var(--c-akk)"},
+  {k:"D",label:"Dativ",sub:"immer",c:"var(--c-dat)"},
+  {k:"G",label:"Genitiv",sub:"immer",c:"var(--c-gen)"},
+  {k:"W",label:"Wo / Wohin",sub:"Dativ oder Akkusativ",c:"var(--ink)"}
+];
+
+// s: sentence with ___, b: base group, a: accepted answers, w: why
+const SPUREN = [
+ {s:"Lara fährt mit ___ nach Chur.",b:"die Kinder",a:["den Kindern"],w:"Nach «mit» Dativ. Mehrzahl: den, und das Nomen bekommt -n: Kindern."},
+ {s:"Das Geschenk ist für ___.",b:"mein Bruder",a:["meinen Bruder"],w:"Nach «für» Akkusativ. Männlich wie «einen»: meinen."},
+ {s:"Das ist die Jacke ___.",b:"der Knabe",a:["des Knaben"],w:"Genitiv männlich: des. «Knabe» bekommt -n, nicht -s: des Knaben."},
+ {s:"Ich schenke ___ eine Karte.",b:"die Lehrerin",a:["der Lehrerin"],w:"Wem schenke ich eine Karte? Dativ, weiblich: der."},
+ {s:"Wir spielen mit ___.",b:"die Freunde",a:["den Freunden"],w:"Nach «mit» Dativ, Mehrzahl mit -n: den Freunden."},
+ {s:"Ohne ___ ist es mir zu kalt.",b:"meine Jacke",a:["meine Jacke"],w:"Nach «ohne» Akkusativ. Bei weiblichen Nomen bleibt «meine»."},
+ {s:"Der Schwanz ___ ist kurz.",b:"der Hase",a:["des Hasen"],w:"Genitiv. «Hase» bekommt -n, nicht -s: des Hasen."},
+ {s:"Der Polizist hilft ___.",b:"der Mensch",a:["dem Menschen"],w:"Wem hilft er? Dativ. «Mensch» bekommt -en: dem Menschen."},
+ {s:"Ich helfe ___.",b:"der Nachbar",a:["dem Nachbarn"],w:"Wem helfe ich? Dativ. «Nachbar» bekommt -n: dem Nachbarn."},
+ {s:"Die Kinder spielen mit ___.",b:"die Bälle",a:["den Bällen"],w:"Nach «mit» Dativ. Mehrzahl: den Bällen."},
+ {s:"Ich spreche mit ___.",b:"die Frauen",a:["den Frauen"],w:"Dativ Mehrzahl. «Frauen» endet schon auf -n, darum kommt nichts dazu."},
+ {s:"Das Velo ___ ist neu.",b:"der Vater",a:["des Vaters"],w:"Wessen Velo? Genitiv: des Vaters, mit -s."},
+ {s:"Der Wärter gibt ___ Fleisch.",b:"der Löwe",a:["dem Löwen"],w:"Wem gibt er Fleisch? Dativ. «Löwe» bekommt -n: dem Löwen."},
+ {s:"Ich kaufe ___.",b:"ein Apfel",a:["einen Apfel"],w:"Wen oder was kaufe ich? Akkusativ: einen Apfel."},
+ {s:"Das Fell ___ ist weich.",b:"der Hund",a:["des Hundes","des Hunds"],w:"Genitiv männlich: des Hundes (mit -es)."},
+ {s:"Wir danken ___.",b:"der Buschauffeur",a:["dem Buschauffeur"],w:"Wem danken wir? Dativ: dem Buschauffeur."},
+ {s:"Die Mutter bringt ___ einen Schirm.",b:"die Kinder",a:["den Kindern"],w:"Wem bringt sie einen Schirm? Dativ Mehrzahl: den Kindern."},
+ {s:"Wegen ___ fällt das Turnen aus.",b:"das Gewitter",a:["des Gewitters"],w:"Nach «wegen» Genitiv. Sächlich: des Gewitters, mit -s."},
+ {s:"Wir fahren mit ___ nach Bern.",b:"die Autos",a:["den Autos"],w:"Dativ Mehrzahl. «Autos» endet auf -s, darum kein -n."}
+];
+
+// s: sentence, x: wrong token indexes, c: correction, w: why
+const FEHLER = [
+ {s:"Ich gehe mit den Hund spazieren.",x:[3],c:"Ich gehe mit dem Hund spazieren.",w:"Nach «mit» steht immer der Dativ."},
+ {s:"Die Kinder spielen mit den Bälle.",x:[5],c:"Die Kinder spielen mit den Bällen.",w:"Im Dativ Mehrzahl bekommt das Nomen ein -n."},
+ {s:"Ich helfe dem Nachbar.",x:[3],c:"Ich helfe dem Nachbarn.",w:"«Nachbar» bekommt ausser im Nominativ Einzahl ein -n."},
+ {s:"Ich lege das Buch auf dem Tisch.",x:[5],c:"Ich lege das Buch auf den Tisch.",w:"Wohin lege ich das Buch? Akkusativ: auf den Tisch."},
+ {s:"Der Polizist hilft den Mensch.",x:[3,4],c:"Der Polizist hilft dem Menschen.",w:"Wem hilft er? Dativ: dem. Und «Mensch» bekommt -en."},
+ {s:"Das ist die Jacke des Knabes.",x:[5],c:"Das ist die Jacke des Knaben.",w:"«Knabe» bekommt -n, auch im Genitiv."},
+ {s:"Das Geschenk ist für dem Vater.",x:[4],c:"Das Geschenk ist für den Vater.",w:"Nach «für» steht immer der Akkusativ."},
+ {s:"Mia gibt die Katze Futter.",x:[2],c:"Mia gibt der Katze Futter.",w:"Wem gibt Mia Futter? Dativ: der Katze."},
+ {s:"Wir wandern durch dem Wald.",x:[3],c:"Wir wandern durch den Wald.",w:"Nach «durch» steht immer der Akkusativ."},
+ {s:"Der Ball liegt unter die Bank.",x:[4],c:"Der Ball liegt unter der Bank.",w:"Wo liegt der Ball? Dativ: unter der Bank."},
+ {s:"Das Fell des Hund ist weich.",x:[3],c:"Das Fell des Hundes ist weich.",w:"Im Genitiv bekommt das männliche Nomen -s oder -es."},
+ {s:"Ich spiele mit meine Freunden.",x:[3],c:"Ich spiele mit meinen Freunden.",w:"Nach «mit» Dativ Mehrzahl: meinen Freunden."},
+ {s:"Der Schwanz des Hases ist kurz.",x:[3],c:"Der Schwanz des Hasen ist kurz.",w:"«Hase» bekommt -n, nicht -s."},
+ {s:"Wir sitzen in den Zimmer.",x:[3],c:"Wir sitzen in dem (im) Zimmer.",w:"Wo sitzen wir? Dativ. «Zimmer» ist sächlich: in dem Zimmer."}
+];
+
+// s: sentence, g: [group, case]
+const KOMPLETT = [
+ {s:"Der Grossvater zeigt den Enkeln das Foto seiner Schwester.",g:[["Der Grossvater","N"],["den Enkeln","D"],["das Foto","A"],["seiner Schwester","G"]]},
+ {s:"Wegen des Regens bringt die Mutter den Kindern einen Schirm.",g:[["des Regens","G"],["die Mutter","N"],["den Kindern","D"],["einen Schirm","A"]]},
+ {s:"Die Bäckerin gibt dem Mädchen ein Gipfeli.",g:[["Die Bäckerin","N"],["dem Mädchen","D"],["ein Gipfeli","A"]]},
+ {s:"Die Tante schenkt dem Kind das Buch ihres Bruders.",g:[["Die Tante","N"],["dem Kind","D"],["das Buch","A"],["ihres Bruders","G"]]},
+ {s:"Der Grossvater erzählt den Kindern eine Geschichte.",g:[["Der Grossvater","N"],["den Kindern","D"],["eine Geschichte","A"]]},
+ {s:"Noah gibt der Lehrerin den Zettel.",g:[["Noah","N"],["der Lehrerin","D"],["den Zettel","A"]]},
+ {s:"Trotz der Kälte kauft der Vater den Kindern ein Glace.",g:[["der Kälte","G"],["der Vater","N"],["den Kindern","D"],["ein Glace","A"]]},
+ {s:"Die Katze des Nachbarn fängt eine Maus.",g:[["Die Katze","N"],["des Nachbarn","G"],["eine Maus","A"]]},
+ {s:"Lea leiht ihrem Freund das Velo ihres Bruders.",g:[["Lea","N"],["ihrem Freund","D"],["das Velo","A"],["ihres Bruders","G"]]}
+];
+
+/* ===================== STATE ===================== */
+const KEY = "kommissariat-4-faelle-v1";
+let S = {name:"", sound:false, best:{}};
+try{ const raw=localStorage.getItem(KEY); if(raw){ const o=JSON.parse(raw); S=Object.assign(S,o); S.best=o.best||{}; } }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+let R = null;
+
+/* ===================== HELPERS ===================== */
+const $ = s => document.querySelector(s);
+function el(tag, props, ...kids){
+  const n=document.createElement(tag);
+  if(props) for(const k in props){
+    if(k==="class") n.className=props[k];
+    else if(k==="html") n.innerHTML=props[k];
+    else if(k.startsWith("on")) n.addEventListener(k.slice(2),props[k]);
+    else n.setAttribute(k,props[k]);
+  }
+  for(const c of kids){ if(c==null) continue; n.append(c.nodeType?c:document.createTextNode(c)); }
+  return n;
+}
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const fmt = n => n.toLocaleString("de-CH");
+const pick1 = a => a[Math.floor(Math.random()*a.length)];
+const norm = s => s.toLowerCase().replace(/ß/g,"ss").replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/[.,!?;:«»"']/g," ").replace(/\s+/g," ").trim();
+function starsFor(c,n){ const p=c/n; return p>=0.9?3:p>=0.7?2:p>=0.5?1:0; }
+function starStr(k){ let s=""; for(let i=0;i<3;i++) s+=`<span class="${i<k?"on":""}">★</span>`; return s; }
+const tag = k => `<span class="tag" style="background:${CASES[k].c}">${CASES[k].name}</span>`;
+
+let AC=null;
+function beep(ok){
+  if(!S.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    (ok?[523,784]:[294,208]).forEach((f,i)=>{
+      const o=AC.createOscillator(), g=AC.createGain(), t=AC.currentTime+i*0.09;
+      o.type=ok?"triangle":"square"; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.1,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+      o.connect(g).connect(AC.destination); o.start(t); o.stop(t+0.18);
+    });
+  }catch(e){}
+}
+
+/* ===================== HOME ===================== */
+function renderHome(){
+  $("#name").value = S.name||"";
+  $("#soundBtn").textContent = "Ton: "+(S.sound?"an":"aus");
+  $("#soundBtn").setAttribute("aria-pressed", S.sound);
+  const chips=$("#caseChips"); chips.innerHTML="";
+  ORDER.forEach(k=> chips.append(el("span",{class:"cchip",style:`background:${CASES[k].c}`,html:`${CASES[k].name} <i>${CASES[k].q}</i>`})));
+  const box=$("#files"); box.innerHTML="";
+  FILES.forEach(f=>{
+    const b=S.best[f.id];
+    box.append(el("article",{class:"file"},
+      el("span",{class:"tab"},f.nr),
+      b && b.stars>0 ? el("span",{class:"solved","aria-label":"gelöst"},"GELÖST") : null,
+      el("h3",null,f.name),
+      el("p",null,f.task+" "+f.n+" Aufgaben."),
+      el("div",{class:"foot"},
+        el("span",{class:"stars",html:starStr(b?b.stars:0),"aria-label":(b?b.stars:0)+" von 3 Sternen"}),
+        el("button",{class:"open",type:"button",onclick:()=>start(f.id)}, b?"Nochmal":"Akte öffnen"))
+    ));
+  });
+  renderBadge();
+}
+function renderBadge(){
+  let stars=0, pts=0, done=0;
+  FILES.forEach(f=>{ const b=S.best[f.id]; if(b){ stars+=b.stars; pts+=b.score; done++; } });
+  const max = FILES.length*3;
+  $("#badge").innerHTML = `
+    <div class="seal"><div><b>${stars}</b><small>von ${max} ★</small></div></div>
+    <div style="min-width:0">
+      <span class="lbl">Dienstausweis · Kommissariat 4 Fälle</span>
+      <h3>${esc(S.name||"Name fehlt")}</h3>
+      <div class="kv">
+        <div><span class="k">Akten</span><span class="v">${done} / ${FILES.length}</span></div>
+        <div><span class="k">Punkte</span><span class="v">${fmt(pts)}</span></div>
+        <div><span class="k">Datum</span><span class="v">${new Date().toLocaleDateString("de-CH")}</span></div>
+      </div>
+      <p class="note">${done===FILES.length ? (stars>=15?"Alle Fälle gelöst! Zeig den Ausweis der Lehrperson.":"Alle Akten bearbeitet. Mit «Nochmal» holst du mehr Sterne.") : "Bearbeite alle sechs Akten. Gespeichert wird nur in diesem Browser."}</p>
+    </div>`;
+}
+
+/* ===================== FLOW ===================== */
+function show(id){ ["home","game","result"].forEach(x=> $("#"+x).hidden=(x!==id)); window.scrollTo(0,0); }
+
+function start(id){
+  const f=FILES.find(x=>x.id===id);
+  const src={verhoer:VERHOER, artikel:ARTIKEL, praep:PRAEP, spuren:SPUREN, fehler:FEHLER, komplett:KOMPLETT}[id];
+  const items=shuffle(src).slice(0,f.n);
+  R={f, items, i:0, score:0, streak:0, best:0, correct:0, log:[], answered:false, timer:null};
+  $("#gTitle").innerHTML=`<small>${f.nr} · ${esc(f.task)}</small>${esc(f.name)}`;
+  $("#gScore").textContent="0"; $("#combo").hidden=true;
+  const ev=$("#evidence"); ev.innerHTML="";
+  items.forEach(()=>ev.append(el("span")));
+  show("game"); showQ();
+}
+function updateEvidence(){
+  [...$("#evidence").children].forEach((s,i)=>{ s.className = R.log[i]? (R.log[i].ok?"ok":"bad") : (i===R.i?"cur":""); });
+}
+function showQ(){
+  R.answered=false; clearTimer();
+  $("#fb").innerHTML=""; updateEvidence();
+  const q=$("#qcard"); q.innerHTML=""; q.classList.remove("pop"); void q.offsetWidth; q.classList.add("pop");
+  const head=el("div",{class:"qhead"}, el("span",{class:"lbl"},`Beweisstück ${R.i+1} / ${R.items.length}`));
+  q.append(head);
+  ({verhoer:qVerhoer, artikel:qArtikel, praep:qPraep, spuren:qSpuren, fehler:qFehler, komplett:qKomplett})[R.f.id](q, R.items[R.i], head);
+}
+function answer(ok, html, label, bonus){
+  if(R.answered) return; R.answered=true; clearTimer();
+  let pts=0;
+  if(ok){ R.streak++; R.correct++; R.best=Math.max(R.best,R.streak); pts=(100+(bonus||0))*(R.streak>=6?3:R.streak>=3?2:1); R.score+=pts; }
+  else R.streak=0;
+  R.log[R.i]={ok,label}; beep(ok);
+  $("#gScore").textContent=fmt(R.score);
+  const mult=R.streak>=6?3:R.streak>=3?2:1;
+  const c=$("#combo"); c.hidden=mult===1; c.textContent=`Serie ${R.streak} · ×${mult}`;
+  updateEvidence();
+  const last=R.i===R.items.length-1;
+  const fb=el("div",{class:"fb pop "+(ok?"ok":"no"),role:"status"},
+    el("div",{class:"msg",html:`<span class="head">${ok?pick1(["Fall gelöst!","Richtig!","Gute Spur!","Treffer!"]):"Falsche Spur."}</span>${html}`}),
+    el("div",{class:"row"},
+      ok? el("span",{class:"pts"},"+"+fmt(pts)) : null,
+      el("button",{class:"primary",type:"button",id:"nextBtn",onclick:next}, last?"Akte schliessen →":"Weiter →")));
+  const box=$("#fb"); box.innerHTML=""; box.append(fb);
+  setTimeout(()=>{ const b=$("#nextBtn"); if(b) b.focus({preventScroll:true}); fb.scrollIntoView({block:"nearest",behavior:"smooth"}); },30);
+}
+function next(){ if(!R) return; R.i++; if(R.i>=R.items.length) return finish(); showQ(); }
+function finish(){
+  clearTimer();
+  const n=R.items.length, stars=starsFor(R.correct,n);
+  const prev=S.best[R.f.id];
+  const better=!prev || stars>prev.stars || (stars===prev.stars && R.score>prev.score);
+  if(better) S.best[R.f.id]={stars,score:R.score};
+  save();
+  const msgs=["Die Spur ist noch kalt. Schau in den Spickzettel und ermittle nochmal.","Erste Spuren gesichert. Mit etwas Übung holst du mehr Sterne.","Starke Ermittlung! Fast alles richtig.","Akte geschlossen, Fall gelöst! Alles im Griff."];
+  const rev=el("ul",{class:"review"});
+  R.log.forEach(l=> rev.append(el("li",null, el("span",{class:l.ok?"ok":"no"},l.ok?"✓":"✗"), el("span",{html:l.label}))));
+  const res=$("#result"); res.innerHTML="";
+  res.append(el("div",{class:"result pop"},
+    stars>0? el("span",{class:"solved",style:"font-size:18px;top:22px;right:22px"},"GELÖST") : null,
+    el("span",{class:"lbl"},`${R.f.nr} · ${R.f.name}`),
+    el("div",{class:"bigstars",html:starStr(stars),"aria-label":stars+" von 3 Sternen"}),
+    el("h2",null,`${R.correct} von ${n} richtig`),
+    el("p",{style:"margin:0;font-size:18px"},msgs[stars]),
+    el("div",{class:"kv",style:"width:100%;max-width:520px"},
+      el("div",null,el("span",{class:"k"},"Punkte"),el("span",{class:"v"},fmt(R.score))),
+      el("div",null,el("span",{class:"k"},"Längste Serie"),el("span",{class:"v"},String(R.best))),
+      el("div",null,el("span",{class:"k"},"Bestwert"),el("span",{class:"v"},better?"neu!":fmt(prev.score)))),
+    el("div",{class:"row"},
+      el("button",{class:"primary",type:"button",id:"againBtn",onclick:()=>start(R.f.id)},"Nochmal ermitteln"),
+      el("button",{class:"ghost",type:"button",onclick:goHome},"Zu allen Akten")),
+    el("h3",{style:"font-family:var(--f-display);font-weight:700;font-size:22px;margin-top:6px"},"Deine Antworten"),
+    rev));
+  show("result");
+  setTimeout(()=>{ const b=$("#againBtn"); if(b) b.focus({preventScroll:true}); },30);
+}
+function goHome(){ clearTimer(); R=null; renderHome(); show("home"); }
+function clearTimer(){ if(R && R.timer){ cancelAnimationFrame(R.timer); R.timer=null; } }
+function runTimer(q, ms, onEnd){
+  const bar=el("div",{class:"timer"}, el("i"));
+  q.append(bar);
+  const i=bar.firstChild, t0=performance.now();
+  const loop=now=>{ if(R.answered) return; const p=Math.max(0,1-(now-t0)/ms); i.style.width=(p*100)+"%"; if(p<=0){ onEnd(); return; } R.timer=requestAnimationFrame(loop); };
+  R.timer=requestAnimationFrame(loop);
+  return ()=>Math.max(0, ms-(performance.now()-t0));
+}
+
+/* ===================== AKTE 1: VERHÖR ===================== */
+function qVerhoer(q,it){
+  q.append(el("p",{class:"qtask"},"In welchem Fall steht die markierte Nomengruppe? Frag mit dem Verb."));
+  q.append(el("p",{class:"sentence",html:esc(it.s).replace(/\[(.+?)\]/g,"<mark>$1</mark>")}));
+  const ch=el("div",{class:"choices"});
+  ORDER.forEach((k,i)=>{
+    const b=el("button",{class:"choice",type:"button","data-k":i+1,"data-v":k,html:`<span class="sw" style="background:${CASES[k].c}"></span><span class="key">${i+1}</span>${CASES[k].name}<small>${CASES[k].q}</small>`});
+    b.addEventListener("click",()=>{
+      if(R.answered) return;
+      const ok=k===it.a;
+      ch.querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.dataset.v===it.a) x.classList.add("right"); });
+      if(!ok) b.classList.add("wrong");
+      const grp=it.s.match(/\[(.+?)\]/)[1];
+      answer(ok, `<span class="sol">«${esc(grp)}» ${tag(it.a)}</span><p class="why">${esc(it.w)}</p>`,
+        `${esc(it.s.replace(/[\[\]]/g,""))} → <b>${esc(grp)}: ${CASES[it.a].name}</b>${ok?"":" (du: "+CASES[k].name+")"}`);
+    });
+    ch.append(b);
+  });
+  q.append(ch);
+}
+
+/* ===================== AKTE 2: ARTIKEL ===================== */
+function qArtikel(q,it){
+  q.append(el("p",{class:"qtask"},"Welcher Artikel gehört in die Lücke? Schnell sein gibt Bonuspunkte."));
+  q.append(el("p",{class:"sentence",html:esc(it.s).replace("___",'<span class="gap" id="gap">?</span>')+` <span class="base">(${esc(it.b)})</span>`}));
+  let decide;
+  const left=runTimer(q, 10000, ()=>decide(null,null));
+  const ch=el("div",{class:"choices arts"});
+  decide=(v,btn)=>{
+    if(R.answered) return;
+    const ok=v===it.a, rest=left();
+    ch.querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.dataset.v===it.a) x.classList.add("right"); });
+    if(btn && !ok) btn.classList.add("wrong");
+    $("#gap").textContent=it.a;
+    const full=it.s.replace("___",it.a).replace(/^./,c=>c.toUpperCase());
+    answer(ok, `<span class="sol">${esc(full)}</span><p class="why">${esc(it.w)}</p>${v?"":'<p class="why"><b>Die Zeit ist abgelaufen.</b></p>'}`,
+      `${esc(full)}${ok?"":" (du: "+(v||"zu langsam")+")"}`, ok?Math.round(50*rest/10000):0);
+  };
+  ARTS.forEach((a,i)=>{
+    const b=el("button",{class:"choice",type:"button","data-k":i+1,"data-v":a,html:`<span class="key">${i+1}</span>${a}`});
+    b.addEventListener("click",()=>decide(a,b));
+    ch.append(b);
+  });
+  q.append(ch);
+}
+
+/* ===================== AKTE 3: PRÄPOSITIONEN ===================== */
+function qPraep(q,it){
+  const [p,k,ex]=it;
+  q.append(el("p",{class:"qtask"},"Welchen Fall verlangt diese Präposition? Bei «Wo / Wohin» hängt es von der Frage ab."));
+  q.append(el("p",{class:"prep"},p));
+  let decide;
+  const left=runTimer(q, 7000, ()=>decide(null,null));
+  const ch=el("div",{class:"choices"});
+  decide=(v,btn)=>{
+    if(R.answered) return;
+    const ok=v===k, rest=left();
+    ch.querySelectorAll(".choice").forEach(x=>{ x.disabled=true; if(x.dataset.v===k) x.classList.add("right"); });
+    if(btn && !ok) btn.classList.add("wrong");
+    const lab=PCASES.find(c=>c.k===k);
+    const why = k==="W" ? "Wo? Dativ. Wohin? Akkusativ." : `Nach «${p}» steht immer der ${lab.label}.`;
+    answer(ok, `<span class="sol">${esc(p)}: ${k==="W"?"Wo / Wohin":lab.label}</span><p class="why">${esc(why)} Beispiel: ${esc(ex)}</p>${v?"":'<p class="why"><b>Die Zeit ist abgelaufen.</b></p>'}`,
+      `<b>${esc(p)}</b>: ${k==="W"?"Wo (Dativ) / Wohin (Akkusativ)":lab.label}${ok?"":" (du: "+(v?PCASES.find(c=>c.k===v).label:"zu langsam")+")"}`, ok?Math.round(50*rest/7000):0);
+  };
+  PCASES.forEach((c,i)=>{
+    const b=el("button",{class:"choice",type:"button","data-k":i+1,"data-v":c.k,html:`<span class="sw" style="background:${c.c}"></span><span class="key">${i+1}</span>${c.label}<small>${c.sub}</small>`});
+    b.addEventListener("click",()=>decide(c.k,b));
+    ch.append(b);
+  });
+  q.append(ch);
+}
+
+/* ===================== AKTE 4: SPUREN ===================== */
+function qSpuren(q,it){
+  q.append(el("p",{class:"qtask"},"Setze die Nomengruppe im richtigen Fall ein. Achte auch auf das Ende des Nomens."));
+  q.append(el("p",{class:"sentence",html:esc(it.s).replace("___",'<span class="gap">?</span>')+` <span class="base">(${esc(it.b)})</span>`}));
+  const inp=el("input",{id:"wInput",type:"text",autocomplete:"off",autocapitalize:"off",spellcheck:"false","aria-label":"Deine Antwort",placeholder:"z. B. dem Hund"});
+  const btn=el("button",{class:"primary",type:"button"},"Prüfen");
+  q.append(el("div",{class:"wform"},inp,btn));
+  const um=el("div",{class:"umls"}, el("span",{class:"note",style:"margin:0"},"Einfügen:"));
+  ["ä","ö","ü"].forEach(c=> um.append(el("button",{type:"button",onclick:()=>{ const s=inp.selectionStart??inp.value.length; inp.value=inp.value.slice(0,s)+c+inp.value.slice(inp.selectionEnd??s); inp.focus(); inp.setSelectionRange(s+1,s+1);} },c)));
+  q.append(um);
+  const check=()=>{
+    if(R.answered) return;
+    const v=norm(inp.value); if(!v){ inp.focus(); return; }
+    const ok=it.a.some(a=>norm(a)===v);
+    inp.disabled=true; btn.disabled=true; inp.classList.add(ok?"right":"wrong");
+    const full=it.s.replace("___",it.a[0]);
+    answer(ok, `<span class="sol">${esc(full)}</span><p class="why">${esc(it.w)}</p>`,
+      `${esc(full)}${ok?"":" (du: "+esc(inp.value.trim())+")"}`);
+  };
+  btn.addEventListener("click",check);
+  inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); e.stopPropagation(); check(); } });
+  setTimeout(()=>inp.focus({preventScroll:true}),40);
+}
+
+/* ===================== AKTE 5: FEHLER ===================== */
+function qFehler(q,it){
+  q.append(el("p",{class:"qtask"},"In diesem Satz steckt ein Fehler. Klicke auf das falsche Wort."));
+  const box=el("div",{class:"tokens"});
+  it.s.split(" ").forEach((t,i)=>{
+    const b=el("button",{class:"tok",type:"button"},t);
+    b.addEventListener("click",()=>{
+      if(R.answered) return;
+      const ok=it.x.includes(i);
+      box.querySelectorAll(".tok").forEach((x,j)=>{ x.disabled=true; if(it.x.includes(j)) x.classList.add("wrong"); });
+      if(!ok) b.classList.add("miss");
+      answer(ok, `<span class="sol">${esc(it.c)}</span><p class="why">${esc(it.w)}</p>`, `${esc(it.s)} → <b>${esc(it.c)}</b>`);
+    });
+    box.append(b);
+  });
+  q.append(box);
+}
+
+/* ===================== AKTE 6: KOMPLETT ===================== */
+function qKomplett(q,it){
+  q.append(el("p",{class:"qtask"},"Bestimme den Fall jeder Nomengruppe. Dann auf «Prüfen» klicken."));
+  let html=esc(it.s);
+  it.g.forEach(([g])=>{ html=html.replace(new RegExp("(^|\\s)"+esc(g).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?=[\\s.,])"),`$1<mark>${esc(g)}</mark>`); });
+  q.append(el("p",{class:"sentence",html}));
+  const sel=it.g.map(()=>null);
+  const box=el("div",{class:"groups"});
+  const chk=el("button",{class:"primary",type:"button",disabled:"disabled"},"Prüfen");
+  it.g.forEach(([g,k],gi)=>{
+    const mini=el("div",{class:"mini",role:"group","aria-label":"Fall für "+g});
+    ORDER.forEach(c=>{
+      const b=el("button",{type:"button","aria-pressed":"false","data-v":c,title:CASES[c].name},CASES[c].short);
+      b.addEventListener("click",()=>{
+        if(R.answered) return;
+        sel[gi]=c;
+        mini.querySelectorAll("button").forEach(x=>{ const on=x.dataset.v===c; x.setAttribute("aria-pressed",on); x.style.background=on?CASES[c].c:""; });
+        if(sel.every(Boolean)) chk.removeAttribute("disabled");
+      });
+      mini.append(b);
+    });
+    box.append(el("div",{class:"grp"}, el("div",{class:"g"},g), mini));
+  });
+  q.append(box, el("div",{class:"row"},chk));
+  chk.addEventListener("click",()=>{
+    if(R.answered) return;
+    let nRight=0;
+    it.g.forEach(([g,k],gi)=>{
+      const mini=box.children[gi].querySelector(".mini");
+      mini.querySelectorAll("button").forEach(x=>{ x.disabled=true; if(x.dataset.v===sel[gi]) x.classList.add(sel[gi]===k?"right":"wrong"); });
+      const lab=box.children[gi].querySelector(".g");
+      if(sel[gi]===k) nRight++; else lab.append(el("small",null,"richtig: "+CASES[k].name+" ("+CASES[k].q+")"));
+    });
+    chk.disabled=true;
+    const ok=nRight===it.g.length;
+    const list=it.g.map(([g,k])=>`${esc(g)}: ${CASES[k].name}`).join(" · ");
+    answer(ok, `<span class="sol">${nRight} von ${it.g.length} richtig</span><p class="why">${it.g.map(([g,k])=>`<b>${esc(g)}</b> ${tag(k)}`).join(" ")}</p>`,
+      `${esc(it.s)}<br><small>${list}</small>`);
+  });
+}
+
+/* ===================== EVENTS ===================== */
+$("#name").addEventListener("input",e=>{ S.name=e.target.value.trim(); save(); renderBadge(); });
+$("#soundBtn").addEventListener("click",()=>{ S.sound=!S.sound; save(); renderHome(); if(S.sound) beep(true); });
+$("#quit").addEventListener("click",goHome);
+const sheet=$("#sheet");
+$("#sheetBtn").addEventListener("click",()=>{ sheet.hidden=false; $("#sheetClose").focus(); });
+$("#sheetClose").addEventListener("click",()=>{ sheet.hidden=true; $("#sheetBtn").focus(); });
+sheet.addEventListener("click",e=>{ if(e.target===sheet) sheet.hidden=true; });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && !sheet.hidden){ sheet.hidden=true; return; }
+  if($("#game").hidden || !R) return;
+  if(e.target && e.target.tagName==="INPUT") return;
+  if(R.answered){ if(e.key==="Enter" && document.activeElement && document.activeElement.id!=="nextBtn"){ e.preventDefault(); next(); } return; }
+  if(/^[1-6]$/.test(e.key)){ const b=document.querySelector(`#qcard .choice[data-k="${e.key}"]`); if(b && !b.disabled){ e.preventDefault(); b.click(); } }
+});
+renderHome();
+})();
+</script>
+</body>
+</html>
