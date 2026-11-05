@@ -59,6 +59,10 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .seg button{background:transparent;border:0;border-radius:6px;padding:8px 12px;color:var(--board-dim);text-align:left;line-height:1.25}
 .seg button small{display:block;font-size:12px;opacity:.85}
 .seg button[aria-pressed="true"]{background:var(--signal);color:var(--signal-ink)}
+.route-info{margin:14px 0 0;padding:10px 12px;border-left:4px solid var(--signal);border-radius:6px;background:var(--board-2);color:inherit;font-size:15px;line-height:1.4}
+.route-info.flash{animation:routeFlash .9s ease-out}
+@keyframes routeFlash{from{background:var(--signal);color:var(--signal-ink)}}
+@media (prefers-reduced-motion:reduce){.route-info.flash{animation:none}}
 .chipbtn{background:transparent;border:1px solid #3a4858;color:var(--board-ink);border-radius:8px;padding:9px 13px}
 .chipbtn:hover{border-color:var(--signal)}
 
@@ -244,6 +248,8 @@ h1,h2,h3{text-wrap:balance;margin:0}
           <button class="chipbtn" id="soundBtn" type="button" aria-pressed="false">Ton: aus</button>
         </div>
       </div>
+
+      <p class="route-info" id="routeInfo" role="status"></p>
 
       <div class="dep" id="dep" role="list"></div>
     </div>
@@ -559,6 +565,9 @@ function renderHome(){
   $("#name").value = S.name||"";
   $("#m1").setAttribute("aria-pressed", S.mode===1);
   $("#m2").setAttribute("aria-pressed", S.mode===2);
+  $("#routeInfo").innerHTML = S.mode===2
+    ? "<b>Strecke 2 ist aktiv:</b> alle 6 Zeitformen, auch Plusquamperfekt, Futur I und Futur II. Sterne und Punkte zählen pro Strecke separat."
+    : "<b>Strecke 1 ist aktiv:</b> Präsens, Präteritum und Perfekt. Sterne und Punkte zählen pro Strecke separat.";
   $("#soundBtn").textContent = "Ton: " + (S.sound?"an":"aus");
   $("#soundBtn").setAttribute("aria-pressed", S.sound);
   const dep = $("#dep"); dep.innerHTML="";
@@ -872,8 +881,12 @@ function qSatz(q, it){
 
 /* ===================== EVENTS ===================== */
 $("#name").addEventListener("input",e=>{ S.name=e.target.value.trim(); save(); renderTicket(); });
-$("#m1").addEventListener("click",()=>{ S.mode=1; save(); renderHome(); });
-$("#m2").addEventListener("click",()=>{ S.mode=2; save(); renderHome(); });
+function setMode(m){
+  S.mode=m; save(); renderHome();
+  const info=$("#routeInfo"); info.classList.remove("flash"); void info.offsetWidth; info.classList.add("flash");
+}
+$("#m1").addEventListener("click",()=>setMode(1));
+$("#m2").addEventListener("click",()=>setMode(2));
 $("#soundBtn").addEventListener("click",()=>{ S.sound=!S.sound; save(); renderHome(); if(S.sound) beep(true); });
 $("#quit").addEventListener("click",goHome);
 const sheet=$("#sheet");
